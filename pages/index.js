@@ -1,28 +1,59 @@
 import Head from 'next/head';
-import Header from '../components/Header';
-import styles from '../styles/Home.module.css';
+import { useRouter } from 'next/router';
+import Image from 'next/image';
+import styles from '../styles/globals.css';
 
 export default function Home() {
+  const router = useRouter();
+
+  const handleLaunchDapp = () => {
+    router.push('/swap'); // Điều hướng đến trang swap
+  };
+
   return (
-    <div className={styles.container}>
+    <div className="container">
       <Head>
-        <title>1inch Clone</title>
-        <meta name="description" content="Decentralized Finance (DeFi) Platform" />
+        <title>1inch Clone - Next.js</title>
+        <meta name="description" content="One-stop access to decentralized finance" />
+        <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <Header />
+      {/* Header */}
+      <header className="header">
+        <div className="logo">
+          <Image src="/logo.png" alt="Logo" width={40} height={40} />
+          <span>1inch</span>
+        </div>
+        <nav className="nav">
+          <a href="#">Products</a>
+          <a href="#">Developers</a>
+          <a href="#">About</a>
+          <a href="#">Governance</a>
+          <a href="#">Blog</a>
+        </nav>
+        <button className="launchButton" onClick={handleLaunchDapp}>
+          Launch dApp
+        </button>
+      </header>
 
-      <main className={styles.main}>
-        <h1 className={styles.title}>One-stop access</h1>
-        <p className={styles.subtitle}>to decentralized finance</p>
-        <div className={styles.buttons}>
-          <button className={styles.launchButton} onClick={() => window.location.href = "/swap"}>Launch dApp</button>
-          <div className={styles.storeButtons}>
-            <button className={styles.storeButton}>Download on the App Store</button>
-            <button className={styles.storeButton}>Get it on Google Play</button>
+      {/* Main Content */}
+      <main className="main">
+        <h1 className="title">One-stop access</h1>
+        <p className="subtitle">to decentralized finance</p>
+        
+        <div className="buttons">
+          <button className="launchButton" onClick={handleLaunchDapp}>Launch dApp</button>
+          <div className="storeButtons">
+            <button className="storeButton">Download on the App Store</button>
+            <button className="storeButton">Get in on Google Play</button>
           </div>
         </div>
       </main>
+
+      {/* Footer */}
+      <footer className="footer">
+        <p>© 2025 1inch Clone - Built with Next.js</p>
+      </footer>
     </div>
   );
 }
