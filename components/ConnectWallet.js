@@ -1,36 +1,30 @@
-import { useState } from "react";
-import Web3 from "web3";
+import { useEffect, useState } from "react";
+import { ethers } from "ethers";
 
 const ConnectWallet = () => {
-  const [account, setAccount] = useState(null);
+  const [walletAddress, setWalletAddress] = useState(null);
+  const somniaChainId = "0xc488"; // Chain ID 50312 (hex)
 
   const connectWallet = async () => {
-    if (window.ethereum) {
-      try {
-        const web3 = new Web3(window.ethereum);
-        await window.ethereum.request({ method: "eth_requestAccounts" });
-        const accounts = await web3.eth.getAccounts();
-        setAccount(accounts[0]);
-
-        // Chuyển mạng sang Somnia
-        await switchToSomniaNetwork();
-
-      } catch (error) {
-        console.error("Kết nối ví thất bại:", error);
-      }
-    } else {
+    if (!window.ethereum) {
       alert("Vui lòng cài đặt MetaMask!");
+      return;
+    }
+    try {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const accounts = await provider.send("eth_requestAccounts", []);
+      setWalletAddress(accounts[0]);
+      await switchToSomniaNetwork();
+    } catch (error) {
+      console.error("Lỗi kết nối ví:", error);
     }
   };
 
   const switchToSomniaNetwork = async () => {
-    const chainId = "0x..." // Thay bằng Chain ID của Somnia
-    const rpcUrl = "https://rpc.somnia.io"; // RPC URL của Somnia
-
     try {
       await window.ethereum.request({
         method: "wallet_switchEthereumChain",
-        params: [{ chainId }]
+        params: [{ chainId: somniaChainId }],
       });
     } catch (switchError) {
       if (switchError.code === 4902) {
@@ -39,32 +33,46 @@ const ConnectWallet = () => {
             method: "wallet_addEthereumChain",
             params: [
               {
-                chainId,
-                chainName: "Somnia",
-                rpcUrls: [rpcUrl],
+                chainId: somniaChainId,
+                chainName: "Somnia Testnet",
                 nativeCurrency: {
-                  name: "SOM",
-                  symbol: "SOM",
-                  decimals: 18
-                }
-              }
-            ]
+                  name: "Somnia Token",
+                  symbol: "STT",
+                  decimals: 18,
+                },
+                rpcUrls: ["https://dream-rpc.somnia.network/"],
+                blockExplorerUrls: ["https://shannon-explorer.somnia.network/"],
+              },
+            ],
           });
         } catch (addError) {
-          console.error("Thêm mạng Somnia thất bại:", addError);
+          console.error("Lỗi thêm mạng Somnia:", addError);
         }
       } else {
-        console.error("Chuyển mạng thất bại:", switchError);
+        console.error("Lỗi chuyển mạng:", switchError);
       }
     }
   };
 
+  useEffect(() => {
+    if (window.ethereum) {
+      window.ethereum.on("accountsChanged", (accounts) => {
+        setWalletAddress(accounts[0] || null);
+      });
+      window.ethereum.on("chainChanged", (chainId) => {
+        if (chainId !== somniaChainId) {
+          switchToSomniaNetwork();
+        }
+      });
+    }
+  }, []);
+
   return (
     <button
       onClick={connectWallet}
-      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-800 transition"
+      className="bg-blue-600 hover:bg-blue-800 text-white px-4 py-2 rounded-lg"
     >
-      {account ? `Connected: ${account.slice(0, 6)}...${account.slice(-4)}` : "Connect Wallet"}
+      {walletAddress ? `Kết nối: ${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : "Kết nối ví"}
     </button>
   );
 };
