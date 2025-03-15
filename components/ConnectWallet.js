@@ -1,79 +1,59 @@
-import { useEffect, useState } from "react";
-import { ethers } from "ethers";
+import { useState, useEffect } from "react";
+import Web3 from "web3";
+import { switchToSomnia } from "../utils/network";
+import { getBalance } from "../utils/balance";
 
 const ConnectWallet = () => {
-  const [walletAddress, setWalletAddress] = useState(null);
-  const somniaChainId = "0xc488"; // Chain ID 50312 (hex)
-
-  const connectWallet = async () => {
-    if (!window.ethereum) {
-      alert("Vui lòng cài đặt MetaMask!");
-      return;
-    }
-    try {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const accounts = await provider.send("eth_requestAccounts", []);
-      setWalletAddress(accounts[0]);
-      await switchToSomniaNetwork();
-    } catch (error) {
-      console.error("Lỗi kết nối ví:", error);
-    }
-  };
-
-  const switchToSomniaNetwork = async () => {
-    try {
-      await window.ethereum.request({
-        method: "wallet_switchEthereumChain",
-        params: [{ chainId: somniaChainId }],
-      });
-    } catch (switchError) {
-      if (switchError.code === 4902) {
-        try {
-          await window.ethereum.request({
-            method: "wallet_addEthereumChain",
-            params: [
-              {
-                chainId: somniaChainId,
-                chainName: "Somnia Testnet",
-                nativeCurrency: {
-                  name: "Somnia Token",
-                  symbol: "STT",
-                  decimals: 18,
-                },
-                rpcUrls: ["https://dream-rpc.somnia.network/"],
-                blockExplorerUrls: ["https://shannon-explorer.somnia.network/"],
-              },
-            ],
-          });
-        } catch (addError) {
-          console.error("Lỗi thêm mạng Somnia:", addError);
-        }
-      } else {
-        console.error("Lỗi chuyển mạng:", switchError);
-      }
-    }
-  };
+  const [account, setAccount] = useState(null);
+  const [balance, setBalance] = useState(null);
 
   useEffect(() => {
     if (window.ethereum) {
-      window.ethereum.on("accountsChanged", (accounts) => {
-        setWalletAddress(accounts[0] || null);
-      });
-      window.ethereum.on("chainChanged", (chainId) => {
-        if (chainId !== somniaChainId) {
-          switchToSomniaNetwork();
+      window.ethereum.on("accountsChanged", async (accounts) => {
+        if (accounts.length > 0) {
+          setAccount(accounts[0]);
+          const balance = await getBalance(accounts[0]);
+          setBalance(balance);
+        } else {
+          setAccount(null);
+          setBalance(null);
         }
       });
     }
   }, []);
 
+  const connectWallet = async () => {
+    if (window.ethereum) {
+      try {
+        const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+        setAccount(accounts[0]);
+        await switchToSomnia();
+        const balance = await getBalance(accounts[0]);
+        setBalance(balance);
+      } catch (error) {
+        console.error("Lỗi kết nối ví:", error);
+      }
+    } else {
+      alert("Vui lòng cài đặt MetaMask để sử dụng!");
+    }
+  };
+
   return (
-    <button
-      onClick={connectWallet}
-      className="bg-blue-600 hover:bg-blue-800 text-white px-4 py-2 rounded-lg"
-    >
-      {walletAddress ? `Kết nối: ${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : "Kết nối ví"}
-    </button>
+    <div>
+      {account ? (
+        <div className="bg-gray-800 p-2 rounded-lg text-white">
+          <p>Ví: {account.slice(0, 6)}...{account.slice(-4)}</p>
+          <p>Số dư: {balance} STT</p>
+        </div>
+      ) : (
+        <button 
+          onClick={connectWallet} 
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-800"
+        >
+          Kết nối ví
+        </button>
+      )}
+    </div>
   );
 };
 
