@@ -1,24 +1,21 @@
 {
-  "name": "somnia-swap",
+  "name": "lumiswap-frontend",
   "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "deploy": "npm run build && vercel --prod",
+    "generate-types": "typechain --target=ethers-v6 --out-dir=types './abis/*.json'"
   },
   "dependencies": {
-    "next": "latest",
-    "react": "latest",
-    "react-dom": "latest",
-    "web3": "^1.8.0",
-    "tailwindcss": "^3.3.0",
-    "postcss": "^8.4.0",
-    "autoprefixer": "^10.4.0"
+    // ... giữ nguyên các dependencies hiện có
   },
   "devDependencies": {
-    "eslint": "^8.0.0",
-    "eslint-config-next": "latest"
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.31",
+    "tailwindcss": "^3.3.5"
   }
 }
